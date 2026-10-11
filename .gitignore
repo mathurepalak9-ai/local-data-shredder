@@ -1,0 +1,22 @@
+# Python and editor-local files
+.venv/
+.vscode/
+.agent.md
+__pycache__/
+*.py[cod]
+
+# Java build output
+*.class
+
+# Local course material and generated bundle
+/OOP UNIT 1.pdf
+/src/Shredder.zip
+/local-data-shredde/
+
+# Keep only application source under src; test fixtures, logs, backups,
+# staged files, and generated reports stay local.
+/src/*
+!/src/Main.java
+!/src/local_bridge.py
+!/src/frontend/
+!/src/frontend/**

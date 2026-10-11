@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f1f3ed" />
+    <title>Local Shredder</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="brand" href="#workspace" aria-label="Local Shredder workspace">
+            <span class="brand-mark" aria-hidden="true">LS</span>
+            <span>Local Shredder</span>
+        </a>
+        <div class="topbar-tools">
+            <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false">Use dark mode</button>
+            <div id="bridgeStatus" class="service-status" data-state="checking" role="status">
+                <span class="status-dot" aria-hidden="true"></span>
+                <span id="bridgeStatusText">Checking local service</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="app-shell">
+        <aside class="sidebar">
+            <p class="nav-label">Workspace</p>
+            <nav aria-label="Main navigation">
+                <a class="nav-link is-active" href="#workspace" aria-current="page">Shred a file</a>
+                <a class="nav-link" href="#activity">Session activity</a>
+                <a class="nav-link" href="#proof">Proof report</a>
+            </nav>
+            <div class="sidebar-note">
+                <span class="note-kicker">LOCAL ONLY</span>
+                <p>Files are handled by the service running on this computer. Nothing is sent to a remote server.</p>
+            </div>
+        </aside>
+
+        <main class="main-content" id="workspace">
+            <div class="page-heading">
+                <div>
+                    <p class="eyebrow">File disposal / workspace</p>
+                    <h1>Prepare a file</h1>
+                    <p class="page-intro">Choose a file, review the overwrite settings, then run a preview or shred the
+                        local staged copy.</p>
+                </div>
+                <div class="step-track" aria-label="Workflow steps">
+                    <span class="step is-current"><b>01</b> Select</span>
+                    <span class="step-line"></span>
+                    <span class="step"><b>02</b> Configure</span>
+                    <span class="step-line"></span>
+                    <span class="step"><b>03</b> Process</span>
+                </div>
+            </div>
+
+            <div class="notice" role="note">
+                <strong>Important: this browser version shreds a staged copy.</strong>
+                <span>The original file you choose stays where it is. This is not yet a native desktop file
+                    picker.</span>
+            </div>
+
+            <aside class="field-note" aria-label="Local privacy fact">
+                <span class="field-note-label">FIELD NOTE</span>
+                <p id="fieldNoteText" aria-live="polite">Overwriting an SSD file cannot guarantee that every physical
+                    block was erased.</p>
+                <button id="nextFieldNote" class="note-next" type="button"
+                    aria-label="Show another local privacy fact">Next fact</button>
+            </aside>
+
+            <section class="workflow-section" aria-labelledby="file-heading">
+                <div class="section-heading">
+                    <span class="section-index">01</span>
+                    <div>
+                        <h2 id="file-heading">Choose a file</h2>
+                        <p>The selected file is copied to this computer's local staging folder.</p>
+                    </div>
+                </div>
+                <label class="file-picker" for="filePicker">
+                    <span class="picker-symbol" aria-hidden="true">+</span>
+                    <span class="picker-copy"><strong>Browse files</strong><small>Choose one file from this
+                            device</small></span>
+                    <input id="filePicker" type="file" />
+                </label>
+                <div id="selectedFile" class="file-summary" hidden>
+                    <span class="file-type-mark" aria-hidden="true">FILE</span>
+                    <span class="file-summary-copy"><strong id="selectedFileName"></strong><small
+                            id="selectedFileMeta"></small></span>
+                    <span id="stagingState" class="tag">Not staged</span>
+                </div>
+            </section>
+
+            <section class="workflow-section configure-section" aria-labelledby="configure-heading">
+                <div class="section-heading">
+                    <span class="section-index">02</span>
+                    <div>
+                        <h2 id="configure-heading">Configure the run</h2>
+                        <p>More passes take longer. They do not guarantee erasure on SSDs or flash storage.</p>
+                    </div>
+                </div>
+                <div class="settings-row">
+                    <label class="setting-label" for="passCount">Overwrite passes</label>
+                    <div class="select-wrap">
+                        <select id="passCount">
+                            <option value="1">1 pass</option>
+                            <option value="2">2 passes</option>
+                            <option value="3" selected>3 passes</option>
+                            <option value="4">4 passes</option>
+                            <option value="5">5 passes</option>
+                            <option value="6">6 passes</option>
+                            <option value="7">7 passes</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mode-switch" role="group" aria-label="Operation mode">
+                    <button id="modePreview" class="mode-choice is-selected" type="button" aria-pressed="true">
+                        <strong>Preview</strong>
+                        <small>Read-only check</small>
+                    </button>
+                    <button id="modeShred" class="mode-choice" type="button" aria-pressed="false">
+                        <strong>Shred staged copy</strong>
+                        <small>Overwrite and remove</small>
+                    </button>
+                </div>
+                <label id="confirmRow" class="confirm-row" for="confirmStagedCopy" hidden>
+                    <input id="confirmStagedCopy" type="checkbox" />
+                    <span>I understand that shredding deletes only the staged copy. My original file remains
+                        unchanged.</span>
+                </label>
+                <div class="action-row">
+                    <button id="runAction" class="button button-secondary" type="button" disabled>Run preview</button>
+                    <span id="modeHint" class="mode-hint">No data will be overwritten or deleted.</span>
+                </div>
+            </section>
+
+            <section id="progressPanel" class="progress-section" aria-labelledby="progress-heading" hidden>
+                <div class="progress-heading-row">
+                    <div>
+                        <p class="eyebrow">Active operation</p>
+                        <h2 id="progress-heading">Shredding staged copy</h2>
+                    </div>
+                    <strong id="progressPercent" class="progress-percent">0%</strong>
+                </div>
+                <div id="progressBar" class="progress-track" role="progressbar" aria-label="Shredding progress"
+                    aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <span id="progressFill"></span>
+                </div>
+                <div class="progress-meta">
+                    <span id="progressDetail" role="status" aria-live="polite">Starting local process</span>
+                    <span id="etaText">Estimating remaining time</span>
+                </div>
+                <pre id="operationOutput" class="operation-output" hidden></pre>
+            </section>
+
+            <section id="resultPanel" class="result-section" aria-labelledby="result-heading" hidden>
+                <div class="result-heading-row">
+                    <div>
+                        <p class="eyebrow">Operation receipt</p>
+                        <h2 id="result-heading">Result</h2>
+                    </div>
+                    <span id="resultStatus" class="result-status">Complete</span>
+                </div>
+                <dl class="result-grid">
+                    <div>
+                        <dt>Operation</dt>
+                        <dd id="resultOperation"></dd>
+                    </div>
+                    <div>
+                        <dt>File</dt>
+                        <dd id="resultFile"></dd>
+                    </div>
+                    <div>
+                        <dt>Size</dt>
+                        <dd id="resultSize"></dd>
+                    </div>
+                    <div>
+                        <dt>Passes</dt>
+                        <dd id="resultPasses"></dd>
+                    </div>
+                    <div>
+                        <dt>Staged copy</dt>
+                        <dd id="resultTarget"></dd>
+                    </div>
+                    <div>
+                        <dt>Original file</dt>
+                        <dd id="resultOriginal"></dd>
+                    </div>
+                    <div>
+                        <dt>Elapsed</dt>
+                        <dd id="resultElapsed"></dd>
+                    </div>
+                </dl>
+                <p id="resultNote" class="result-note"></p>
+            </section>
+
+            <section id="activity" class="workflow-section activity-section" aria-labelledby="activity-heading">
+                <div class="section-heading section-heading-with-action">
+                    <span class="section-index">03</span>
+                    <div>
+                        <h2 id="activity-heading">Session activity</h2>
+                        <p>Events from this browser session only.</p>
+                    </div>
+                    <button id="clearHistory" class="button button-quiet clear-history" type="button" disabled
+                        title="Clears this session list only. The audit log is not changed.">Clear history</button>
+                </div>
+                <ol id="activityList" class="activity-list">
+                    <li class="empty-activity">No operations started in this session.</li>
+                </ol>
+            </section>
+
+            <section id="proof" class="workflow-section proof-section" aria-labelledby="proof-heading">
+                <div class="section-heading">
+                    <span class="section-index">04</span>
+                    <div>
+                        <h2 id="proof-heading">Validation report</h2>
+                        <p id="proofStatus" role="status">Generate or export the local validation report.</p>
+                    </div>
+                </div>
+                <div class="action-row">
+                    <button id="generateProof" class="button button-secondary" type="button">View report</button>
+                    <button id="exportProof" class="button button-quiet" type="button">Export report</button>
+                </div>
+                <pre id="proofOutput" class="proof-output" hidden></pre>
+            </section>
+
+            <footer class="page-footer">
+                <span>Local processing only</span>
+                <span>Overwrite is not a guaranteed secure erase on SSDs, cloud-synced folders, or backed-up
+                    files.</span>
+            </footer>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
